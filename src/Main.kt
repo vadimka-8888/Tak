@@ -206,11 +206,17 @@ fun main()
 
 fun makeStep(statePrev: Array<Array<MutableList<Stone>>>, qPieces: Counter, command: String, player: Int): Pair<Array<Array<MutableList<Stone>>>, Boolean>
 {
-    val state = copyState(statePrev)
-    val params = command.split(" ")
-    val i = params[1].toInt()
-    val j = params[2].toInt()
-    val cell = state[i][j]
+    val state = copyState(statePrev);
+    val params = command.split(" ");
+    val i: Int; val j: Int;
+    try {
+        i = params[1].toInt();
+        j = params[2].toInt();
+    } catch (ex: Exception) {
+        println("неправильный ввод!");
+        return Pair(statePrev, false);
+    }
+    val cell = state[i][j];
     when
     {
         params[0] == "put" -> {
@@ -246,10 +252,16 @@ fun makeStep(statePrev: Array<Array<MutableList<Stone>>>, qPieces: Counter, comm
             }
         }
         params[0] == "move" -> {
-            val total = params.drop(4).map{ it.toInt() }
-            val totalSum = total.reduce{ a, b -> a + b}
+            val total: List<Int>; val totalSum: Int;
+            try {
+                total = params.drop(4).map { it.toInt() }
+                totalSum = total.reduce { a, b -> a + b }
+            } catch (ex: Exception) {
+                println("Ошибка! В конце команды должно быть количество перемещаемых камней")
+                return Pair(state, false);
+            }
 
-            if (total.reduce{ a, b -> a + b} > 5 || total.reduce{ a, b -> a * b} <= 0) {
+            if (totalSum > 5 || totalSum > state[i][j].count() || total.reduce{ a, b -> a * b} <= 0) {
                 println("Неправильный ввод, попробуйте снова (что-то не так с количеством камней)");
                 return Pair(state, false);
             } else if (cell.isEmpty())
@@ -678,22 +690,23 @@ fun makeOutput(state: Array<Array<MutableList<Stone>>>): String
     var notes = ""
     for (i in 0..4)
     {
-        var line = "$i${AnsiColor.BOLD_BLUE}|${AnsiColor.RESET} "
+        var line = "$i${AnsiColor.BOLD_BLUE}|${AnsiColor.RESET} ";
         for (j in 0..4)
         {
-            val cell = state[i][j]
-            line += if (cell.isNotEmpty()) cell[0].toString() else "0  "
-            if (cell.count() > 1)
-            {
-                notes += "($i, $j) - "
+            val cell = state[i][j];
+            if (cell.count() <= 1) {
+                line += if (cell.isNotEmpty()) cell[0].toString() else "0  ";
+            } else {
+                line += AnsiColor.BOLD_RED + (if (cell.isNotEmpty()) cell[0].toString() else "0  ") + AnsiColor.RESET;
+                notes += "($i, $j) - ";
                 for (st in cell)
                 {
-                    notes += "${st.toString()}, "
+                    notes += "${st.toString()}| ";
                 }
-                notes = notes.substring(0..notes.length - 2) + "\n"
+                notes = notes.substring(0..notes.length - 2) + "\n";
             }
         }
-        line += "${AnsiColor.BOLD_BLUE}|${AnsiColor.RESET}\n"
+        line += "${AnsiColor.BOLD_BLUE}|${AnsiColor.RESET}\n";
         mainLines += line
     }
 
